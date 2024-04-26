@@ -44,9 +44,9 @@ const process = {
     
   },
   // 회원가입 기능 컨트롤러
-  register: (req, res) => {
+  register: async (req, res) => {
     const user = new User(req.body);
-    const response = user.register();
+    const response = await user.register();
     return res.json(response);    // response를 json파일로 변환후 클라이언트에게 응답
   },
 };

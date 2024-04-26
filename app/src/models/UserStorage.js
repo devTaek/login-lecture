@@ -24,17 +24,29 @@ class UserStorage {
   // public한 변수에서 private한 변수로 바꿔줘야한다.
 
 
-  // class 자체에서 메서드에 접근하려면 static을 붙여줘야한다.
-  static getUsers(...fields) {
-    // 은닉화된 users를 반환
-    // const users = this.#users;
-    const newUsers = fields.reduce((newUsers, field) => {
+    static #getUsers(data, isAll, fields) {
+      const users = JSON.parse(data)
+      if(isAll) return users;
+      const newUsers = fields.reduce((newUsers, field) => {
       if(users.hasOwnProperty(field)) {
         newUsers[field] = users[field];
       }
       return newUsers;
     }, {});
     return newUsers;
+  }
+
+  // class 자체에서 메서드에 접근하려면 static을 붙여줘야한다.
+  static getUsers(isAll, ...fields) {
+    return fs
+      .readFile("./src/databases/users.json")
+      .then((data) => {
+        return this.#getUsers(data, isAll, fields);
+      })
+      .catch((err) => console.erorr);
+    // 은닉화된 users를 반환
+    // const users = this.#users;
+   
   }
   
   static getUserInfo(id) {
@@ -48,11 +60,17 @@ class UserStorage {
   }
 
   // 클라이언트에서 전달한 데이터를 저장해주는 함수
-  static save(userInfo) {
-    // const users = this.#users;
+  static async save(userInfo) {
+    // users.json파일을 읽어 온 후에
+    const users = await this.getUsers(true);
+    if(users.id.includes(userInfo.id)) {
+      throw ("이미 존재하는 아이디입니다.");
+    }
     users.id.push(userInfo.id);
-    users.name.push(userInfo.name);
+    users.name.push(userInfo.name)
     users.psword.push(userInfo.psword);
+    // 데이터를 추가
+    fs.writeFile("./src/databases/users.json", JSON.stringify(users))
     return {success: true};
   }
 }
